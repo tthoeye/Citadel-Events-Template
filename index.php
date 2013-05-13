@@ -16,8 +16,9 @@
         <link rel="stylesheet" href="css/events.min.css" />
         <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile.structure-1.2.0.min.css" /> 
         <link rel="stylesheet" href="css/my.css" />
-        
-            
+        <link rel="stylesheet" href="css/jquery.ui.datepicker.mobile.css" />
+
+
         <!--------------- Javascript dependencies -------------------> 
             
         <!-- Google Maps JavaScript API v3 -->    
@@ -32,6 +33,18 @@
         <script src="http://jawj.github.com/OverlappingMarkerSpiderfier/bin/oms.min.js"></script>  
         <!-- jQuery Library --> 
         <script src="js/jquery-1.8.2.min.js"></script>
+
+        <script>
+            //reset type=date inputs to text
+            $(document).bind("mobileinit", function() {
+                $.mobile.page.prototype.options.degradeInputs.date = true;
+            });
+        </script>
+
+
+        <script src="js/jQuery.ui.datepicker.js"></script>
+        <script src="js/jquery.ui.datepicker.mobile.js"></script>	
+
         <!-- jQuery Mobile Library -->
         <script src="js/jquery.mobile-1.2.0.min.js"></script>  
         <!-- Page params Library: Used to pass query params to embedded/internal pages of jQuery Mobile -->    
@@ -45,8 +58,14 @@
          <!-- Home Page: Contains the Map -->
         <div data-role="page" id="page1" class="page">
             <header data-role="header" data-posistion="fixed" data-id="constantNav" data-fullscreen="true">
-                <span class="ui-title">Points of Interest - Events</span>
-                <a href="" id="filter" data-icon="gear" data-iconpos="notext" data-theme="a" title="Settings" class="ui-btn-left">&nbsp;</a>
+                <span class="ui-title">Events</span>
+
+                <!-- we use controlgroup so as to have two buttons, one for filters and one for date -->
+                <div data-type="horizontal" data-role="controlgroup" class="ui-btn-left">  
+                    <a href="" id="filter" data-role="button" data-icon="gear" data-iconpos="notext" data-theme="a" title="Settings">&nbsp;</a>
+                    <a href="#page4" id="datefilter" data-role="button" data-icon="grid" data-iconpos="notext"  title="Search by Date">&nbsp;</a>
+                </div>
+
                 <a href="#info" data-rel="dialog" data-icon="info" data-iconpos="notext" data-theme="b" title="Info" class="ui-btn-right">&nbsp;</a>
                 <div data-role="navbar" class="navbar">
                     <ul>
@@ -77,7 +96,7 @@
         <div data-role="page" id="page2" class="page">
 
             <header data-role="header" data-posistion="fixed" data-id="constantNav">
-                <span class="ui-title"> Points of Interest - Events </span>
+                <span class="ui-title">Events</span>
                 <fieldset data-role="controlgroup" class="favourites-button">
                     <input type="checkbox" name="favourites" id="favourites" class="custom" />
                     <label for="favourites">Favourites</label>
@@ -104,7 +123,7 @@
         </div><!-- /page -->
         
         <!-- Details Page: Contains the details of a selected element -->
-        <div data-role="page" id="page3" data-title="Event fullstory page title" class="page">
+        <div data-role="page" id="page3" data-title="Event Details" class="page">
             <header data-role="header" data-posistion="fixed" data-fullscreen="true">
                 <span class="ui-title"> Points of Interest - Events </span>
                 <a href="" data-icon="back" data-iconpos="notext" data-theme="a" title="Back" data-rel="back" class="ui-btn-right">&nbsp;</a>
@@ -129,7 +148,28 @@
                 <a href="" id="addFav" data-icon="star" data-theme="a" title="Add to favourites" data-rel="star" class="ui-btn-center">Add to favourites</a>
                 <a href="" id="removeFav" data-icon="star" data-theme="a" title="Remove from favourites" data-rel="star" class="ui-btn-center">Remove from favourites</a>
             </footer>
-                
+
+        </div><!-- /page -->
+
+
+        <!-- Details Page: Contains the details of a selected element (calendar) -->
+        <div data-role="page" id="page4" data-title="Events by Date" class="page">
+            <header data-role="header" data-posistion="fixed" data-fullscreen="true">
+                <span class="ui-title">Show Events after the selected Date</span>
+                <a href="" data-icon="back" data-iconpos="notext" data-theme="a" title="Back" data-rel="back" class="ui-btn-right">&nbsp;</a>
+            </header>
+
+            <div data-role="content" id="itemDate">
+                <div class="filters-list">
+                    <label id="date" for="date">Search for Events:</label>
+                    <input type="date" name="date" id="date" value=""  />	
+                </div>
+            </div><!--item-->
+
+            <footer data-role="footer" data-posistion="fixed" data-fullscreen="true">
+                <a href="" id="dateapply" data-icon="gear" data-theme="a" title="Apply" class="ui-btn-center">Apply</a>
+               
+            </footer>
         </div><!-- /page -->
             
             
@@ -157,7 +197,10 @@
                     /* Holds all markers */
                     var markersArray = [];
                     /* Define filters - get them from db */
-                    var filters = <?php include_once CLASSES.'filters.php'; printFilters(); ?>;
+            var filters = <?php
+		include_once CLASSES . 'filters.php';
+		printFilters();
+		?>;
                     /* Remember if a page has been opened at least once */
                     var lastLoaded = '';
                     /* Remember if 'near me' marker is loaded */
@@ -173,6 +216,7 @@
                     var pageId = 0;
                     /* Set infoBubble global variable */
                     var infoBubble;
+            	    var dateIsNull=true;
                     
                     /* The coordinates of the center of the map */
                     //Issy

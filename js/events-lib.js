@@ -98,13 +98,16 @@ function addMarkers()
 
     /* For every POI we add a marker with an attached infoBubble */
     $.each(pois, function(i, poi) {
-        if (isFilterSelected(poi.category)) {
+        //get the date picked from calendar
+        var dateSelected = $("#date").val();
+        if ((isFilterSelected(poi.category)) && (dateIsNull || isDateFilterSelected(dateSelected, poi)))
+        {
             /*  posList contains a list of space separated coordinates.
              *  The first two are lat and lon
              */
             var coords = poi.location.point.pos.posList.split(" ");
             var current_markerpos = new google.maps.LatLng(coords[0], coords[1]);
-            var marker_image = getFavouriteValue(poi.id)?"images/star.png":getMarkerImage();
+            var marker_image = getFavouriteValue(poi.id) ? "images/star.png" : getMarkerImage(poi.category[0]);
             var current_marker = new google.maps.Marker({
                 position: current_markerpos,
                 map: map,
@@ -124,14 +127,36 @@ function addMarkers()
 }
 
 /*
- * Returns the marker image picking a random color
+ * Returns the marker image picking a unique color for every category
  */
-var markerRotate = 1;
-function getMarkerImage() {
-    var marker_image = 'images/pin' + markerRotate + '.png';
-    markerRotate = markerRotate >= 3 ? 1 : markerRotate + 1;
+function getMarkerImage(category) {
+    var coloredMarkers = new Array();
 
-    return marker_image;
+    for (var j = 0; j < 10; j++) {
+        coloredMarkers[j] = 'images/pin' + j + '.png';
+    }
+
+    for (i = 0; i < filters.length; i++) {
+        if (filters[i].name == category) {
+            return coloredMarkers[i % 10];
+        }
+    }
+}
+
+
+function getMarkerClass(category) {
+
+    var coloredClassMarkers = new Array();
+
+    for (var j = 0; j < 10; j++) {
+        coloredClassMarkers[j] = 'pin' + j;
+    }
+
+    for (i = 0; i < filters.length; i++) {
+        if (filters[i].name == category) {
+            return coloredClassMarkers[i % 10];
+        }
+    }
 }
 
 
@@ -249,18 +274,18 @@ function setListPagePois()
             }
 
             var isFavourite = getFavouriteValue(poi.id);
-            var image = (isFavourite?"images/star.png":getMarkerImage());
-            var className = (isFavourite?" class='favourite'":" class='nonfavourite'");
+            var imageClass = (isFavourite ? "star" : getMarkerClass(poi.category[0]));
+            var className = (isFavourite ? " class='favourite'" : " class='nonfavourite'");
 
             contentTemplate +=
-                "<li" + className + ">" +
-                "<a href='' onclick='overrideDetailClick(\"" + poi.id + "\"); return false;'>" +
-                "<img src='" + image + "' alt='Event' />" +
-                "<h3>" + poi.title + "</h3>" +
-                "<h4>" + poi.description + "</h4>" +
-                category +
-                "</a>" +
-                "</li>";
+                    "<li" + className + ">" +
+                    "<a href='' onclick='overrideDetailClick(\"" + poi.id + "\"); return false;'>" +
+                    "<span class='" + imageClass + " icon'></span>" +
+                    "<h3>" + poi.title + "</h3>" +
+                    "<h4>" + poi.description + "</h4>" +
+                    category +
+                    "</a>" +
+                    "</li>";
         }
     });
     return contentTemplate;
@@ -402,8 +427,8 @@ $(document).ready(function() {
 
     /* Click handler for the 'near me' button */
     $('.pois-nearme').click(function() {
-        lastLoaded = 'mearme';
-        $.mobile.changePage("#page1", { transition: "none"});
+        lastLoaded = 'nearme';
+        $.mobile.changePage("#page1", {transition: "none"});
         $('.navbar > ul > li > a').removeClass('ui-btn-active');
         $('.pois-nearme').addClass('ui-btn-active');
 
@@ -510,7 +535,30 @@ $(document).ready(function() {
         }
         return false;
     });
-    
+
+
+
+    /* Click handler for the dateapply button inside the page with calendar. 
+     * The markers on the map will be updated according to the 
+     * selected date.
+     */
+
+    $('#dateapply').click(function() {
+        console.log("mesa sto dateapply");
+        var dateApplied = $("#date").val();
+        if (dateApplied.length > 0) {
+            dateIsNull = false;
+        }
+        else {
+            dateIsNull = true;
+        }
+        addMarkers();
+        loadListPageData();
+        refreshListPageView();
+        $.mobile.changePage("#page1", {transition: "slidedown"});
+        //return false;
+    });
+
     /* Adds a poi to favourites list and use
      * local storage to remember my favourites
      */
@@ -556,6 +604,25 @@ $(document).ready(function() {
     });
 }); // end $(document).ready
 
+/* 
+ * Matches the selected date
+ * with POIS event start dates
+ */
+function isDateFilterSelected(date, poi) {
+    var parsedDateSelected = $.datepicker.parseDate('dd-mm-yy', date.toString());
+    // console.log("parse dateSelected = ", date.toString());
+    var eventStart = getCitadel_attr(poi, "#Citadel_eventStart").text;
+    // console.log("eventStart = ", eventStart);
+    var parsedEventDate = $.datepicker.parseDate('dd/mm/yy', eventStart.toString());
+    // console.log("parse eventStart = ", parsedEventDate.toString());
+    if (parsedEventDate >= parsedDateSelected) {
+        // console.log("parsedEventDate = ", parsedEventDate);
+        return true;
+    }
+    else {
+        return false;
+    }
+}
 
 /* Sets the available filters  */
 function setFilters() {
@@ -566,7 +633,7 @@ function setFilters() {
         var checked = filter.selected?' checked':'';
         
         filters_html += "<input type='checkbox'" + checked + " name='map-filter' id='map-filter" + i + "' class='map-filter' value=\"" + filter.name + "\" />" +
-            "<label for='map-filter" + i + "'>" + filter.name + "</label>";
+                "<label for='map-filter" + i + "'><img id='img_style' src='images/pin" + i + ".png'/> " + filter.name + "</label>";
     }
     $('#map-filter > div > fieldset').html(filters_html);
     $('#map-filter > div > fieldset > input').checkboxradio({ mini: true});
