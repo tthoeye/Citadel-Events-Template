@@ -9,10 +9,53 @@ include_once 'Config.php';
 include_once CLASSES.'Response.class.php';
 include_once CLASSES.'PoisDataset.class.php';
 include_once CLASSES.'Util.class.php';
-
 include_once CLASSES.'Database.class.php';
+define('KEY', '5CA9F618-1747-4EAE-ACB6-BB2D57522BE6');
 
 
+// Connect to the API
+$url = "http://build.uitdatabank.be/api/events/search?key=" . KEY . "&regio=Gent";
+
+// Download and parse a bunch of XML
+$xml = file_get_contents($url);
+$dom = new DOMDocument;
+$dom->loadXML($xml);
+
+$pois = array();
+foreach ($dom->getElementsByTagName('item') as $item) {
+    $poi = array();
+    $poi['id'] = $item->getAttribute('id');
+    $poi['title'] = $item->getAttribute('title');
+    $poi['description'] = $item->getAttribute('shortdescription');
+    $poi['category'] = explode(';',$item->getAttribute('heading'));
+    $poi['location'] = array();
+    $poi['location']['point'] = array();
+    $poi['location']['point']['term'] = "centroid";
+    $poi['location']['point']['pos'] = array();
+    $poi['location']['point']['pos']['srsName'] = "http://www.opengis.net/def/crs/EPSG/0/4326";
+    $poi['location']['point']['pos']['posList'] = "48.8275910 2.27699460";  
+    $pois[] = $poi;
+}
+$dataset = array();
+$dataset['id'] = "http://www.issy.fr";
+$dataset['updated'] = "20121030T09:38:21-5:00";
+$dataset['created'] = "20121030T09:38:21-5:00";
+$dataset['lang'] = "fr-FR";
+$dataset['author'] = array();
+$dataset['author']['id'] = "http://www.issy.fr";
+$dataset['author']['value'] = "Issy";
+$dataset['license'] = "";
+$dataset['link'] = "";
+$dataset['updatefrequency'] = "";
+$dataset['poi'] = $pois;
+
+$complete['dataset'] = $dataset;
+$poisDataset = Response::createFromArray(DatasetTypes::Poi, $complete);
+Util::printJsonObj(new Response($poisDataset));
+
+
+
+/*
 if(USE_DATABASE) {
 	// open db connection
 	Database::connect();
@@ -29,10 +72,12 @@ else {
 	
 	// TODO: should type check the source file
 	$assocArray = json_decode($json, true);
-
+	
 	$poisDataset = Response::createFromArray(DatasetTypes::Poi, $assocArray);
 	Util::printJsonObj(new Response($poisDataset));
 }
+*/
+
 
 
 

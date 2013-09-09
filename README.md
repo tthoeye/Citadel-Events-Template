@@ -22,4 +22,7 @@ Connection With UIT Databank
 This branch of the code contains a connector that will allow you to directly access real-time data from the Belgian
 "UIT Databank".
 
+The API is available via http://build.uitdatabank.be/api/events/
+an example key to use is: 5CA9F618-1747-4EAE-ACB6-BB2D57522BE6
 
+All data on this source is formatted using the CdbXML standard: http://www.cultuurdatabank.com/CdbXML/
