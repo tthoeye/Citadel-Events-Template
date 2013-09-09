@@ -14,3 +14,12 @@ Deployment
 
 For more details on how to install the template and the underlying technology please refer to the 
 [guide documents](doc/Installation Guide-Events.docx) inside the 'doc' folder. 
+
+
+Connection With UIT Databank
+============================
+
+This branch of the code contains a connector that will allow you to directly access real-time data from the Belgian
+"UIT Databank".
+
+
