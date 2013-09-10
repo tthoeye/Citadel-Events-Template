@@ -28,22 +28,34 @@ foreach ($dom->getElementsByTagName('item') as $item) {
     $poi['title'] = $item->getAttribute('title');
     $poi['description'] = $item->getAttribute('shortdescription');
     $poi['category'] = explode(';',$item->getAttribute('heading'));
+    // Define location
     $poi['location'] = array();
+    // Define LocationPoint
     $poi['location']['point'] = array();
     $poi['location']['point']['term'] = "centroid";
     $poi['location']['point']['pos'] = array();
     $poi['location']['point']['pos']['srsName'] = "http://www.opengis.net/def/crs/EPSG/0/4326";
-    $poi['location']['point']['pos']['posList'] = "48.8275910 2.27699460";  
+    $poi['location']['point']['pos']['posList'] = "48.8275910 2.27699460";
+    // Define LocationAddress
+    $poi['location']['address'] = array();
+    $poi['location']['address']['value'] = "";
+    $poi['location']['address']['postal'] = "";
+    $poi['location']['address']['city'] = ""; 
+    
+    $poi['attribute'] = array();
     $pois[] = $poi;
 }
+
 $dataset = array();
-$dataset['id'] = "http://www.issy.fr";
-$dataset['updated'] = "20121030T09:38:21-5:00";
-$dataset['created'] = "20121030T09:38:21-5:00";
-$dataset['lang'] = "fr-FR";
+$dataset['id'] = "http://www.uitdatabank.be";
+$objDateTime = new DateTime('NOW');
+$ctime = $objDateTime->format(DateTime::ISO8601); // ISO8601 formated datetime
+$dataset['updated'] = $ctime;
+$dataset['created'] = $ctime;
+$dataset['lang'] = "nl-NL";
 $dataset['author'] = array();
-$dataset['author']['id'] = "http://www.issy.fr";
-$dataset['author']['value'] = "Issy";
+$dataset['author']['id'] = "http://www.gent.be";
+$dataset['author']['value'] = "Gent";
 $dataset['license'] = "";
 $dataset['link'] = "";
 $dataset['updatefrequency'] = "";
